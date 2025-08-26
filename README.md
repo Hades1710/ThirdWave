@@ -22,6 +22,7 @@ Bright Side is a modern, full-stack student dashboard designed to empower studen
 ## 🛠️ Tech Stack
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS, Chart.js
 - **Backend**: FastAPI, Python
+- **Database**:SQLite
 - **APIs**: OpenAI, Groq, HuggingFace
 
 ---
