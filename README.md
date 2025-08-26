@@ -9,13 +9,44 @@ Bright Side is a modern, full-stack student dashboard designed to empower studen
 
 ---
 
-## ✨ Features
-- 📊 **Analytics Dashboard**: Visualize your progress and performance.
-- 🤖 **Debate & EQ Bots**: AI-powered bots for debate and emotional intelligence support.
-- 📝 **Quizzes**: Test your knowledge and track improvement.
-- 📚 **Resources**: Curated learning materials.
-- ⚡ **Emergency Notification**: FastAPI backend for real-time alerts.
-- 🔒 **Authentication**: Secure login and signup.
+## ✨ Features  
+
+- 📊 **Analytics Dashboard**  
+  Get a clear picture of your growth over time with interactive charts and insights.  
+  - Tracks **debate scores**, **EQ levels**, and **progress trends**.  
+  - Provides **visual breakdowns** of strengths (logic, empathy, tone) and areas for improvement.  
+  - Encourages students to monitor their performance just like a fitness tracker — but for communication skills.  
+
+- 🤖 **Debate & EQ Bots**  
+  Practice debates with an AI-powered coach that analyzes both **what you say** and **how you say it**.  
+  - Gives **real-time argument feedback** (clarity, logic, persuasiveness).  
+  - Detects **emotional tone** (confidence, empathy, stress).  
+  - Offers **personalized suggestions** to balance logic with emotional intelligence.  
+
+- 📝 **EQ-Enhanced Quizzes & Journaling**  
+  Not just regular quizzes — these are designed to assess both **knowledge** and **emotional awareness**.  
+  - Short quizzes that reflect how you respond under pressure.  
+  - Journaling prompts to help students reflect on daily stress, communication style, or debate performance.  
+  - Results feed back into the analytics dashboard for a **holistic progress report**.  
+
+- 📚 **Learning Resources**  
+  Handpicked materials to help students **sharpen debate skills and boost EQ**.  
+  - Curated guides on logic, communication, and empathy.  
+  - AI-recommended resources based on quiz and debate performance.  
+  - Supports **self-paced learning** alongside real-time practice.  
+
+- 📧 **Emotional Alert System**  
+  Monitors student input during sessions and sends **alerts if signs of stress or distress are detected**.  
+  - Uses NLP sentiment analysis to spot negative emotional trends.  
+  - Sends email notifications (via SMTP) to the student for self-awareness.  
+  - Acts as a **safety net** for mental well-being in digital learning.  
+
+- 🔒 **Authentication & Security**  
+  A simple and secure student login system.  
+  - Email-based authentication for signup & login.  
+  - Protects student sessions and personal progress data.  
+  - Ensures only registered students can access debates, quizzes, and analytics.  
+
 
 ---
 
