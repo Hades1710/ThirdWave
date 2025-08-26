@@ -54,7 +54,19 @@ const AnalyticsPage: React.FC = () => {
     if (!user) return;
     // Initial fetch
     setEQData(getRecentUserSessions(user.id, 365));
-    setDebateData(getRecentUserDebateSessions(user.id, 365));
+    
+    // Generate sample debate data if none exists (for demo)
+    let debateDataFromService = getRecentUserDebateSessions(user.id, 365);
+    if (debateDataFromService.length === 0) {
+      // Import and use sample debate data
+      import('../../services/debateService').then(({ getSampleDebateSessions }) => {
+        getSampleDebateSessions(user.id);
+        setDebateData(getRecentUserDebateSessions(user.id, 365));
+      });
+    } else {
+      setDebateData(debateDataFromService);
+    }
+    
     setQuizData(getRecentQuizSessions(user.id, 365));
 
     // Generate sample quiz data if none exists (for demo)
@@ -467,7 +479,16 @@ const AnalyticsPage: React.FC = () => {
   // Helper: Get best/worst sessions
   const getBestWorstSessions = (data: any[], key: string) => {
     if (!data.length) return { best: null, worst: null };
-    const sorted = [...data].sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0));
+    
+    // Create a comparison function that handles nested properties
+    const getValue = (item: any, key: string) => {
+      if (key === 'overallScore') {
+        return item.performanceMetrics?.overallScore || item.overallScore || 0;
+      }
+      return item[key] ?? 0;
+    };
+    
+    const sorted = [...data].sort((a, b) => getValue(b, key) - getValue(a, key));
     return { best: sorted[0], worst: sorted[sorted.length - 1] };
   };
 
@@ -1183,74 +1204,94 @@ const AnalyticsPage: React.FC = () => {
               </div>
             </div>
             {/* Enhanced Debate Analytics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
-              {/* Debate Topic Distribution Pie Chart */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-semibold mb-2">Debate Topic Distribution</h3>
-                <ChartPie data={debateTopicPieData} />
-                <p className="mt-2 text-sm text-gray-600">
-                  This chart shows the frequency of your debate topics. Focusing on a variety of topics can help broaden your skills.
+            {filteredDebateData.length === 0 ? (
+              <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center my-8">
+                <div className="text-gray-400 mb-4">
+                  <Activity className="h-16 w-16 mx-auto mb-4" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">No Debate Data Available</h3>
+                <p className="text-gray-500 text-sm mb-4">
+                  Start participating in debates to see detailed analytics and performance insights here.
                 </p>
+                <Link 
+                  to="/debate-bot" 
+                  className="inline-block px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                >
+                  Start Your First Debate
+                </Link>
               </div>
-              {/* Performance Metrics Radar (as before) */}
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-semibold mb-2">Performance Metrics Overview</h3>
-                <ChartLine
-                  data={{
-                    labels: ['Coherence', 'Persuasiveness', 'Knowledge', 'Articulation', 'Overall'],
-                    datasets: [
-                      {
-                        label: 'Average',
-                        data: [
-                          averages.avgCoherence ?? 0,
-                          averages.avgPersuasiveness ?? 0,
-                          averages.avgKnowledge ?? 0,
-                          averages.avgArticulation ?? 0,
-                          averages.avgOverall ?? 0
-                        ],
-                        borderColor: '#6366F1',
-                        backgroundColor: 'rgba(99,102,241,0.2)',
-                        fill: true,
-                        tension: 0.3
-                      }
-                    ]
-                  }}
-                  options={{
-                    plugins: { legend: { display: false } },
-                    scales: { y: { min: 0, max: 100 } }
-                  }}
-                />
-                <p className="mt-2 text-sm text-gray-600">
-                  This chart summarizes your debate performance across key metrics. Aim for balanced growth in all areas.
-                </p>
-              </div>
-            </div>
-            {/* Debate Score Trend Line Chart with insight */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8">
-              <h3 className="text-lg font-semibold mb-2">Debate Score Trend</h3>
-              <ChartLine
-                data={{
-                  labels: filteredDebateData.map(getSessionDate),
-                  datasets: [
-                    {
-                      label: 'Overall Score',
-                      data: filteredDebateData.map(item => item.overallScore ?? item.performanceMetrics?.overallScore ?? 0),
-                      borderColor: '#A855F7',
-                      backgroundColor: 'rgba(168,85,247,0.2)',
-                      fill: true,
-                      tension: 0.3
-                    }
-                  ]
-                }}
-                options={{
-                  plugins: { legend: { display: false } },
-                  scales: { y: { min: 0, max: 100 } }
-                }}
-              />
-              <p className="mt-2 text-sm text-gray-600">
-                Track your debate performance over time. Consistent improvement indicates effective learning and adaptation.
-              </p>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+                  {/* Debate Topic Distribution Pie Chart */}
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-2">Debate Topic Distribution</h3>
+                    <ChartPie data={debateTopicPieData} />
+                    <p className="mt-2 text-sm text-gray-600">
+                      This chart shows the frequency of your debate topics. Focusing on a variety of topics can help broaden your skills.
+                    </p>
+                  </div>
+                  {/* Performance Metrics Radar (as before) */}
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-2">Performance Metrics Overview</h3>
+                    <ChartLine
+                      data={{
+                        labels: ['Coherence', 'Persuasiveness', 'Knowledge', 'Articulation', 'Overall'],
+                        datasets: [
+                          {
+                            label: 'Average',
+                            data: [
+                              averages.avgCoherence ?? 0,
+                              averages.avgPersuasiveness ?? 0,
+                              averages.avgKnowledge ?? 0,
+                              averages.avgArticulation ?? 0,
+                              averages.avgOverall ?? 0
+                            ],
+                            borderColor: '#6366F1',
+                            backgroundColor: 'rgba(99,102,241,0.2)',
+                            fill: true,
+                            tension: 0.3
+                          }
+                        ]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        scales: { y: { min: 0, max: 100 } }
+                      }}
+                    />
+                    <p className="mt-2 text-sm text-gray-600">
+                      This chart summarizes your debate performance across key metrics. Aim for balanced growth in all areas.
+                    </p>
+                  </div>
+                </div>
+                {/* Debate Score Trend Line Chart with insight */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8">
+                  <h3 className="text-lg font-semibold mb-2">Debate Score Trend</h3>
+                  <ChartLine
+                    data={{
+                      labels: filteredDebateData.map(getSessionDate),
+                      datasets: [
+                        {
+                          label: 'Overall Score',
+                          data: filteredDebateData.map(item => item.overallScore ?? item.performanceMetrics?.overallScore ?? 0),
+                          borderColor: '#A855F7',
+                          backgroundColor: 'rgba(168,85,247,0.2)',
+                          fill: true,
+                          tension: 0.3
+                        }
+                      ]
+                    }}
+                    options={{
+                      plugins: { legend: { display: false } },
+                      scales: { y: { min: 0, max: 100 } }
+                    }}
+                  />
+                  <p className="mt-2 text-sm text-gray-600">
+                    Track your debate performance over time. Consistent improvement indicates effective learning and adaptation.
+                  </p>
+                </div>
+              </>
+            )}
             {/* Recent Debate Sessions */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -1259,44 +1300,62 @@ const AnalyticsPage: React.FC = () => {
               </div>
               
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Topic</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Score</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Knowledge</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Persuasiveness</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredDebateData.map((session) => (
-                      <tr key={session.date}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {formatDate(session.timestamp || session.date)}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">
-                          {session.topic}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                          <span className={`font-medium ${getScoreColor(session.overallScore)}`}>
-                            {session.overallScore}/100
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                          <span className={`font-medium ${getScoreColor(session.knowledgeDepth)}`}>
-                            {session.knowledgeDepth}/100
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                          <span className={`font-medium ${getScoreColor(session.persuasiveness)}`}>
-                            {session.persuasiveness}/100
-                          </span>
-                        </td>
+                {filteredDebateData.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-2">
+                      <Activity className="h-12 w-12 mx-auto mb-2" />
+                    </div>
+                    <p className="text-gray-500 text-sm">No debate sessions yet</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Start a debate session to see your performance analytics here
+                    </p>
+                    <Link 
+                      to="/debate-bot" 
+                      className="inline-block mt-3 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600 transition-colors"
+                    >
+                      Start Debate Session
+                    </Link>
+                  </div>
+                ) : (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Topic</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Score</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Knowledge</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Persuasiveness</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredDebateData.map((session, index) => (
+                        <tr key={session.id || index}>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatDate(session.timestamp || session.date)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-800">
+                            {session.topic}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm">
+                            <span className={`font-medium ${getScoreColor(session.performanceMetrics?.overallScore || session.overallScore || 0)}`}>
+                              {session.performanceMetrics?.overallScore || session.overallScore || 0}/100
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm">
+                            <span className={`font-medium ${getScoreColor(session.performanceMetrics?.knowledgeDepth || session.knowledgeDepth || 0)}`}>
+                              {session.performanceMetrics?.knowledgeDepth || session.knowledgeDepth || 0}/100
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm">
+                            <span className={`font-medium ${getScoreColor(session.performanceMetrics?.persuasiveness || session.persuasiveness || 0)}`}>
+                              {session.performanceMetrics?.persuasiveness || session.persuasiveness || 0}/100
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </>
@@ -1349,7 +1408,10 @@ const AnalyticsPage: React.FC = () => {
                 <div className="text-sm">
                   <div>Date: {formatDate(bestDebate.best.date || bestDebate.best.timestamp)}</div>
                   <div>Topic: {bestDebate.best.topic}</div>
-                  <div>Overall Score: {bestDebate.best.overallScore || bestDebate.best.performanceMetrics?.overallScore}/100</div>
+                  <div>Overall Score: {bestDebate.best.performanceMetrics?.overallScore || bestDebate.best.overallScore || 0}/100</div>
+                  <div>Coherence: {bestDebate.best.performanceMetrics?.coherence || bestDebate.best.coherence || 0}/100</div>
+                  <div>Persuasiveness: {bestDebate.best.performanceMetrics?.persuasiveness || bestDebate.best.persuasiveness || 0}/100</div>
+                  <div>Knowledge: {bestDebate.best.performanceMetrics?.knowledgeDepth || bestDebate.best.knowledgeDepth || 0}/100</div>
                   <div>Feedback: {bestDebate.best.feedback}</div>
                 </div>
               ) : <div className="text-gray-500">No data</div>}

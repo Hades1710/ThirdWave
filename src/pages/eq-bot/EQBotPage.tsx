@@ -543,15 +543,36 @@ const EQBotPage: React.FC = () => {
     // If distress threshold is exceeded and alert hasn't been sent, send email alert
     if (shouldSendAlert && !alertSent && user) {
       try {
+        console.log(`High distress detected (${emotionScores.distressLevel}/${distressThreshold}). Attempting to send emergency alert...`);
+        
+        // Only alert counselors and parents for high distress (most important contacts)
         const alertSentSuccessfully = await sendEmergencyAlert(
           user,
           emotionScores.distressLevel,
-          input.trim()
+          input.trim(),
+          ['counselor', 'parent'] // Focus on most critical contacts first
         );
         
         if (alertSentSuccessfully) {
           setAlertSent(true);
-          console.log('Emergency alert sent to contacts');
+          console.log('Emergency alert sent successfully to emergency contacts');
+          
+          // Show user feedback that help is being contacted
+          const alertMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'bot',
+            content: "I've noticed you're going through a particularly difficult time. I've discretely notified your emergency contacts so they can provide additional support. Remember, reaching out for help is a sign of strength, not weakness. You're not alone in this.",
+            timestamp: new Date(),
+            emotionalState: 'calm',
+          };
+          
+          // Add the alert notification message after a short delay
+          setTimeout(() => {
+            setMessages(prev => [...prev, alertMessage]);
+          }, 2000);
+          
+        } else {
+          console.warn('Failed to send emergency alert - user may not have valid emergency contacts configured');
         }
       } catch (error) {
         console.error('Failed to send emergency alert:', error);
@@ -817,7 +838,7 @@ const EQBotPage: React.FC = () => {
               }`}
             >
               <p>{message.content}</p>
-              <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${getEmotionColor(message.emotionalState, showScores)}`}>
+              <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${getEmotionColor(message.emotionalState)}`}>
                 {formatEmotionalState(message.emotionalState, showScores)}
               </span>
             </div>

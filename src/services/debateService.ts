@@ -282,37 +282,44 @@ export const analyzeDebatePerformanceTrends = (
 };
 
 // Demo and testing methods
-export const getSampleDebateSessions = (): DebateSession[] => {
-  if (debateSessions.length === 0) {
-    const sampleTopics = [
-      'AI Ethics in Engineering',
-      'Renewable Energy Future',
-      'Quantum Computing Applications',
-      'Cybersecurity Best Practices',
-      'Future of Engineering Education'
-    ];
-    
-    // Generate sample data
-    for (let i = 0; i < 10; i++) {
-      const randomTopic = sampleTopics[Math.floor(Math.random() * sampleTopics.length)];
-      
-      // Generate reasonable performance metrics
-      const coherence = Math.round(60 + Math.random() * 30);
-      const persuasiveness = Math.round(55 + Math.random() * 35);
-      const knowledgeDepth = Math.round(65 + Math.random() * 25);
-      const articulation = Math.round(50 + Math.random() * 40);
-      
-      createAndSaveDebateSession(
-        'sample-user',
-        randomTopic,
-        `Sample debate transcript on ${randomTopic}`,
-        coherence,
-        persuasiveness,
-        knowledgeDepth,
-        articulation
-      );
-    }
+export const getSampleDebateSessions = (userId?: string): DebateSession[] => {
+  const targetUserId = userId || 'sample-user';
+  
+  // Check if we already have data for this user
+  const existingSessions = debateSessions.filter(session => session.userId === targetUserId);
+  if (existingSessions.length > 0) {
+    return existingSessions;
   }
   
-  return debateSessions;
+  // Generate sample data for this specific user
+  const sampleTopics = [
+    'AI Ethics in Engineering',
+    'Renewable Energy Future',
+    'Quantum Computing Applications',
+    'Cybersecurity Best Practices',
+    'Future of Engineering Education'
+  ];
+  
+  // Generate sample data
+  for (let i = 0; i < 10; i++) {
+    const randomTopic = sampleTopics[Math.floor(Math.random() * sampleTopics.length)];
+    
+    // Generate reasonable performance metrics
+    const coherence = Math.round(60 + Math.random() * 30);
+    const persuasiveness = Math.round(55 + Math.random() * 35);
+    const knowledgeDepth = Math.round(65 + Math.random() * 25);
+    const articulation = Math.round(50 + Math.random() * 40);
+    
+    createAndSaveDebateSession(
+      targetUserId,
+      randomTopic,
+      `Sample debate transcript on ${randomTopic}`,
+      coherence,
+      persuasiveness,
+      knowledgeDepth,
+      articulation
+    );
+  }
+  
+  return debateSessions.filter(session => session.userId === targetUserId);
 };
